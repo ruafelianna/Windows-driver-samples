@@ -3191,9 +3191,32 @@ HRESULT SaveXml(LPTSTR szfileName, DWORD dwCreationDisposition)
 
             if (SUCCEEDED(hr))
             {
-                writer = gcnew StreamWriter(fileName);
-                serializer->Serialize(writer, (XmlGlobal::Instance())->ViewAll);
-                writer->Close();
+                MemoryStream^ ms = gcnew MemoryStream();
+                serializer->Serialize(ms, (XmlGlobal::Instance())->ViewAll);
+                LONG64 length = ms->Length;
+
+                String^ tpl = "\\\\.\\pipe\\";
+                if (fileName->StartsWith(tpl))
+                {
+                    array <unsigned char>^ bytes = BitConverter::GetBytes(length);
+                    if (BitConverter::IsLittleEndian)
+                    {
+                        Array::Reverse(bytes);
+                    }
+
+                    String^ pipeName = fileName->Substring(tpl->Length);
+                    System::IO::Pipes::NamedPipeClientStream^ stream = gcnew System::IO::Pipes::NamedPipeClientStream(pipeName);
+
+                    stream->Connect(2000);
+                    stream->Write(bytes, 0, sizeof(LONG64));
+                    stream->Write(ms->ToArray(), 0, (int)length);
+                }
+                else
+                {
+                    writer = gcnew StreamWriter(fileName);
+                    writer->Write(System::Text::Encoding::UTF8->GetString(ms->ToArray()));
+                    writer->Close();
+                }
             }
 
             // Release and reinit XML View for next iteration if requested
