@@ -117,6 +117,7 @@
       <WarningLevel>Level4</WarningLevel>
       <ExceptionHandling>
       </ExceptionHandling>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
     </ClCompile>
     <Link>
       <BaseAddress Condition="'$(Platform)'=='x64'">0x101000000</BaseAddress>
