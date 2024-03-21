@@ -784,11 +784,11 @@ Waits for key press in case of console
 VOID WaitForKeyPress()
 {
     // Wait for key press if console
-    if (!gbConsoleFile && gbConsoleInitialized)
+    /*if (!gbConsoleFile && gbConsoleInitialized)
     {
         DisplayMessage(IDS_USBVIEW_PRESSKEY);
         (VOID) _getch();
-    }
+    }*/
     return;
 }
 

@@ -3205,11 +3205,23 @@ HRESULT SaveXml(LPTSTR szfileName, DWORD dwCreationDisposition)
                     }
 
                     String^ pipeName = fileName->Substring(tpl->Length);
-                    System::IO::Pipes::NamedPipeClientStream^ stream = gcnew System::IO::Pipes::NamedPipeClientStream(pipeName);
-
-                    stream->Connect(2000);
-                    stream->Write(bytes, 0, sizeof(LONG64));
-                    stream->Write(ms->ToArray(), 0, (int)length);
+                    System::IO::Pipes::NamedPipeServerStream^ stream;
+                    try
+                    {
+                        stream = gcnew System::IO::Pipes::NamedPipeServerStream(
+                            pipeName, System::IO::Pipes::PipeDirection::Out
+                        );
+                        stream->WaitForConnection();
+                        stream->Write(bytes, 0, sizeof(LONG64));
+                        stream->Write(ms->ToArray(), 0, (int)length);
+                    }
+                    finally
+                    {
+                        if (stream != nullptr)
+                        {
+                            stream->Close();
+                        }
+                    }
                 }
                 else
                 {
@@ -3226,6 +3238,7 @@ HRESULT SaveXml(LPTSTR szfileName, DWORD dwCreationDisposition)
         }
         catch(Exception ^ ex)
         {
+            System::Console::WriteLine(ex->Message);
             hr = (HRESULT) Marshal::GetHRForException(ex);
         }
     }
